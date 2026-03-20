@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.DS_Store
+venv/
+*.sqlite3
+chroma_db/
+researchmind_build_plan_de454fa3.plan.md
