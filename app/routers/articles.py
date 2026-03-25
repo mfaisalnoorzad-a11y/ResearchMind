@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from app.schemas import ArticleCreate, ArticleResponse, ArticleUpdate
 from app.database import get_db
 from app.models import Article
+from app.services.extractor import extract_content
+from app.services.ai_service import summarize
 
 router = APIRouter()
 
@@ -13,6 +15,12 @@ def article_create(article: ArticleCreate, db: Session = Depends(get_db)):
         tags=article.tags, 
         notes=article.notes)
     
+    content = extract_content(str(article.url))
+    
+    if content:
+        new_article.content = content
+        new_article.summary = summarize(content) 
+
     db.add(new_article)
     db.commit()
     db.refresh(new_article)
@@ -21,6 +29,22 @@ def article_create(article: ArticleCreate, db: Session = Depends(get_db)):
 @router.get("/articles", response_model=list[ArticleResponse])
 def article_read(skip: int=0, limit: int=20, db: Session = Depends(get_db)):
     return db.query(Article).offset(skip).limit(limit).all()
+
+@router.post("/articles/{id}/summarize", response_model=ArticleResponse)
+def article_sum(id: int, db: Session = Depends(get_db)):
+    article = db.query(Article).filter(Article.id == id).first()
+    
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    content = extract_content(str(article.url))
+
+    if content:
+        article.summary = summarize(content)
+    
+    db.commit()
+    db.refresh(article)
+    return article
 
 @router.get("/articles/{id}", response_model=ArticleResponse)
 def article_id(id: int, db: Session = Depends(get_db)):
