@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models import Article
 from app.services.extractor import extract_content
 from app.services.ai_service import summarize
-
+from app.services.vector_store import add_article, remove_article
 router = APIRouter()
 
 @router.post("/articles", status_code=201, response_model=ArticleResponse)
@@ -24,6 +24,10 @@ def article_create(article: ArticleCreate, db: Session = Depends(get_db)):
     db.add(new_article)
     db.commit()
     db.refresh(new_article)
+
+    if new_article.content:
+        add_article(str(new_article.id), new_article.content)
+
     return new_article
 
 @router.get("/articles", response_model=list[ArticleResponse])
@@ -76,5 +80,7 @@ def article_delete(id: int, db: Session = Depends(get_db)):
 
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
+    
+    remove_article(str(article.id))
     db.delete(article)
     db.commit()
