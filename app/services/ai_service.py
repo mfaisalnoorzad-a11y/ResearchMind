@@ -14,3 +14,4 @@ def summarize(content: str) -> str:
         }]
     )
     return message.content[0].text
+
