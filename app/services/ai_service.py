@@ -4,6 +4,7 @@ from app.config import settings
 client = Anthropic(api_key=settings.anthropic_api_key)
 
 def summarize(content: str) -> str:
+    """Summarizes articles"""
     message = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=1024,

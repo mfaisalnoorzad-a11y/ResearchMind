@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from app.schemas import ArticleCreate, ArticleResponse, ArticleUpdate
 from app.database import get_db
 from app.models import Article
@@ -15,20 +16,30 @@ def article_create(article: ArticleCreate, db: Session = Depends(get_db)):
         tags=article.tags, 
         notes=article.notes)
     
-    content = extract_content(str(article.url))
-    
-    if content:
-        new_article.content = content
-        new_article.summary = summarize(content) 
+    try:
+        content = extract_content(str(article.url))
+        
+        if content:
+            new_article.content = content
+            new_article.summary = summarize(content) 
+    except Exception:
+        pass # article saves without content/summary
 
     db.add(new_article)
-    db.commit()
-    db.refresh(new_article)
+    try:
+        db.commit()
+        db.refresh(new_article)
 
-    if new_article.content:
-        add_article(str(new_article.id), new_article.content)
+        if new_article.content:
+            add_article(str(new_article.id), new_article.content)
 
-    return new_article
+        return new_article
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=409, 
+            detail="Resource already exists or violates database constraints."
+        )
 
 @router.get("/articles", response_model=list[ArticleResponse])
 def article_read(skip: int=0, limit: int=20, db: Session = Depends(get_db)):
