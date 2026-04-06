@@ -4,6 +4,10 @@ A research assistant API that helps save, summarize, and search academic article
 
 Built with FastAPI, PostgreSQL, ChromaDB, and Claude AI.
 
+## Motivation
+
+ResearchMind was created to solve a common problem with many AI tools. They can sound helpful, but they sometimes generate summaries from their own background knowledge instead of the actual source, and in some cases they even return links that are inaccurate or not real. ResearchMind takes a more reliable approach by working from real user-provided article URLs, extracting the actual content, generating summaries from that content, and supporting semantic search across saved research. Because of this, it works less like a generic chatbot and more like a trustworthy research workflow based on real sources.
+
 ## Features
 
 - Save articles by URL with automatic content extraction
