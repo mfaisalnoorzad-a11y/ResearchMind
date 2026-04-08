@@ -30,3 +30,7 @@ class QARequest(BaseModel):
 class QAResponse(BaseModel):
     answer: str
     sources: list
+
+class ArticleListResponse(BaseModel):
+    count: int
+    articles: list[ArticleResponse]

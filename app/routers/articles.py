@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from app.schemas import ArticleCreate, ArticleResponse, ArticleUpdate
+from typing import Optional
+from app.schemas import ArticleCreate, ArticleResponse, ArticleUpdate, ArticleListResponse
 from app.database import get_db
 from app.models import Article
 from app.services.extractor import extract_content
 from app.services.ai_service import summarize
-from app.services.vector_store import add_article, remove_article
+from app.services.vector_store import add_article, remove_article, search
+
 router = APIRouter()
 
 @router.post("/articles", status_code=201, response_model=ArticleResponse)
@@ -41,9 +43,14 @@ def article_create(article: ArticleCreate, db: Session = Depends(get_db)):
             detail="Resource already exists or violates database constraints."
         )
 
-@router.get("/articles", response_model=list[ArticleResponse])
-def article_read(skip: int=0, limit: int=20, db: Session = Depends(get_db)):
-    return db.query(Article).offset(skip).limit(limit).all()
+@router.get("/articles", response_model=ArticleListResponse)
+def article_read(skip: int=0, limit: int=20, tag: Optional[str] = None, db: Session = Depends(get_db)):
+    query = db.query(Article)
+    if tag:
+        query = query.filter(Article.tags.contains(tag))
+    
+    articles = query.offset(skip).limit(limit).all()
+    return ArticleListResponse(count=len(articles), articles=articles)
 
 @router.post("/articles/{id}/summarize", response_model=ArticleResponse)
 def article_sum(id: int, db: Session = Depends(get_db)):
@@ -95,3 +102,19 @@ def article_delete(id: int, db: Session = Depends(get_db)):
     remove_article(str(article.id))
     db.delete(article)
     db.commit()
+
+@router.get("/articles/{id}/related", response_model=list[ArticleResponse])
+def search_related_articles(id: int, db: Session = Depends(get_db)):
+    article = db.query(Article).filter(Article.id == id).first()
+    
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    if not article.content:
+        return []
+
+    results = search(article.content, 6)
+    ids = [int(i) for i in results["ids"][0]]
+    ids = [i for i in ids if i != id]  # filter out the current article
+    articles = db.query(Article).filter(Article.id.in_(ids)).all()
+    return articles
