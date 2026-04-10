@@ -10,3 +10,4 @@ trafilatura
 httpx
 pytest
 python-dotenv
+alembic

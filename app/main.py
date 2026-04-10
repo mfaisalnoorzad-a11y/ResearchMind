@@ -6,7 +6,6 @@ from app.routers import articles, search, qa
 
 
 app = FastAPI()
-Base.metadata.create_all(bind=engine)
 
 app.include_router(articles.router)
 app.include_router(search.router)
