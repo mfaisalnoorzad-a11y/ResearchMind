@@ -116,5 +116,9 @@ def search_related_articles(id: int, db: Session = Depends(get_db)):
     results = search(article.content, 6)
     ids = [int(i) for i in results["ids"][0]]
     ids = [i for i in ids if i != id]  # filter out the current article
+    if not ids:
+        return []
+
     articles = db.query(Article).filter(Article.id.in_(ids)).all()
-    return articles
+    articles_by_id = {article.id: article for article in articles}
+    return [articles_by_id[article_id] for article_id in ids if article_id in articles_by_id]

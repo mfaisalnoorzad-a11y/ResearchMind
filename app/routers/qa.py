@@ -12,11 +12,15 @@ router = APIRouter()
 def ask_questions(request: QARequest, db: Session = Depends(get_db)):
     vector_results = search(request.question, 5)
     ids = [int(id) for id in vector_results["ids"][0]]
+    if not ids:
+        raise HTTPException(status_code=404, detail="No relevant articles found.")
 
     articles = db.query(Article).filter(Article.id.in_(ids)).all()
+    articles_by_id = {article.id: article for article in articles}
+    ordered_articles = [articles_by_id[article_id] for article_id in ids if article_id in articles_by_id]
 
     context = ""
-    for article in articles:
+    for article in ordered_articles:
         context += f"Title: {article.title}\nContent: {article.content}\n\n"
 
     try:
@@ -29,7 +33,7 @@ def ask_questions(request: QARequest, db: Session = Depends(get_db)):
 
         return QAResponse(
             answer=message.content[0].text,
-            sources=[{"id": a.id, "title": a.title} for a in articles]
+            sources=[{"id": a.id, "title": a.title} for a in ordered_articles]
         )
 
     except Exception:

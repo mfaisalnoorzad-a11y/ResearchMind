@@ -11,7 +11,10 @@ router = APIRouter()
 def searching(q: str, limit: int=5, db: Session = Depends(get_db)):
     vector_results = search(q, limit)
     ids = [int(id) for id in vector_results["ids"][0]]
+    if not ids:
+        return []
 
-    article = db.query(Article).filter(Article.id.in_(ids)).all()
-    return article
+    articles = db.query(Article).filter(Article.id.in_(ids)).all()
+    articles_by_id = {article.id: article for article in articles}
+    return [articles_by_id[article_id] for article_id in ids if article_id in articles_by_id]
     
