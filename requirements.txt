@@ -5,7 +5,6 @@ psycopg2-binary
 pydantic-settings
 anthropic
 chromadb
-sentence-transformers
 trafilatura
 httpx
 pytest
