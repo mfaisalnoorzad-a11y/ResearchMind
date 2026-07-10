@@ -206,7 +206,7 @@ alembic upgrade head
 - ChromaDB is stored locally at `./chroma_db`
 - On Railway, Chroma storage is ephemeral unless a persistent volume is attached
 
-If you want to publish your live URL here, add it under this section after deployment.
+[researchmind](https://researchmind-production-fbdb.up.railway.app/docs)
 
 ## Example Requests
 
