@@ -105,6 +105,16 @@ README.md
 | `GET` | `/search?q=...` | Semantic search across saved articles |
 | `POST` | `/qa` | Ask a question over saved articles |
 
+## Screenshots
+
+### Interactive API docs
+
+![FastAPI Swagger docs showing ResearchMind endpoints](docs/images/api-docs-overview.png)
+
+### Article creation response
+
+![FastAPI response after creating an article with extracted content and generated summary](docs/images/article-create-response.png)
+
 ## Local Development
 
 ### 1. Create and activate a virtual environment
